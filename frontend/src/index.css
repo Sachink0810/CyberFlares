@@ -9,6 +9,33 @@
 }
 
 @layer components {
+  /* ---------- FLOOD//SIM landing page ---------- */
+  .fs-root {
+    font-family: theme("fontFamily.sans");
+  }
+  @media (pointer: fine) {
+    .fs-cursor-none,
+    .fs-cursor-none * {
+      cursor: none !important;
+    }
+  }
+  .fs-grain {
+    position: fixed;
+    inset: -60%;
+    width: 220%;
+    height: 220%;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0.035;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: 140px 140px;
+  }
+  .fs-serif {
+    font-family: theme("fontFamily.serif");
+    font-feature-settings: normal;
+  }
+
   .card {
     @apply bg-ink-800 border border-line rounded-xl p-4;
   }
