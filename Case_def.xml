@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<case app="GenCase v5" date="2026-09-04">
+    <casedef>
+        <!-- 1. PHYSICAL CONSTANTS -->
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="1000" /> <!-- Density of water (kg/m^3) -->
+        </constantsdef>
+
+        <!-- 2. GEOMETRY & VOXELIZATION -->
+        <geometry>
+            <!-- dp = Particle Distance. A dp of 2.0m means each particle represents 8 cubic meters -->
+            <definition dp="2.0" />
+            <commands>
+                <mainlist>
+                    <!-- Import the FABDEM Terrain as a solid boundary -->
+                    <setshapemode>actual</setshapemode>
+                    <setdrawmode mode="full" />
+                    <setmkbound mk="0" />
+                    <drawshape>
+                        <file setshape="true" mk="0" file="Machchhu_Watertight.stl" />
+                    </drawshape>
+                </mainlist>
+            </commands>
+        </geometry>
+
+        <!-- 3. INFLOW BOUNDARY CONDITION -->
+        <inout>
+            <!-- Defines the injection buffer plane where the hydrograph enters -->
+            <inlet default="true">
+                <listinlet>
+                    <inlet mkbound="1">
+                        <!-- REPLACE: You must define the X, Y, Z box representing the dam breach opening -->
+                        <boxfill>
+                            <bottom x="X_MIN" y="Y_MIN" z="Z_MIN" />
+                            <top x="X_MAX" y="Y_MAX" z="Z_MAX" />
+                        </boxfill>
+                        <!-- Link to the Saberi & Zenz empirical hydrograph generated in Phase 2 -->
+                        <flow>
+                            <flow_hydrograph file="Machchhu_II_Saberi_Zenz_Hydrograph.csv" />
+                        </flow>
+                    </inlet>
+                </listinlet>
+            </inlet>
+        </inout>
+
+        <!-- 4. EXECUTION PARAMETERS -->
+        <execution>
+            <parameters>
+                <parameter key="TimeMax" value="7200" comment="Simulate 2 hours of physical time" />
+                <parameter key="TimeOut" value="60" comment="Save output frames every 60 seconds" />
+                <parameter key="ViscoTreatment" value="1" comment="Artificial viscosity" />
+                <parameter key="Visco" value="0.01" comment="Viscosity value" />
+            </parameters>
+        </execution>
+    </casedef>
+</case>
