@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<case app="GenCase v5" date="{{ generated_date }}">
+    <casedef>
+        <!-- 1. PHYSICAL CONSTANTS -->
+        <constantsdef>
+            <gravity x="0" y="0" z="-9.81" />
+            <rhop0 value="1000" />
+        </constantsdef>
+
+        <!-- 2. GEOMETRY & VOXELIZATION -->
+        <geometry>
+            <definition dp="{{ dp }}" />
+            <commands>
+                <mainlist>
+                    <setshapemode>actual</setshapemode>
+                    <setdrawmode mode="full" />
+                    <setmkbound mk="0" />
+                    <drawshape>
+                        <file setshape="true" mk="0" file="{{ stl_filename }}" />
+                    </drawshape>
+                </mainlist>
+            </commands>
+        </geometry>
+
+        <!-- 3. INFLOW BOUNDARY CONDITION (dam breach) -->
+        <inout>
+            <inlet default="true">
+                <listinlet>
+                    <inlet mkbound="1">
+                        <boxfill>
+                            <bottom x="{{ inlet.x_min }}" y="{{ inlet.y_min }}" z="{{ inlet.z_min }}" />
+                            <top    x="{{ inlet.x_max }}" y="{{ inlet.y_max }}" z="{{ inlet.z_max }}" />
+                        </boxfill>
+                        <flow>
+                            <flow_hydrograph file="{{ hydrograph_filename }}" />
+                        </flow>
+                    </inlet>
+                </listinlet>
+            </inlet>
+        </inout>
+
+        <!-- 4. EXECUTION PARAMETERS -->
+        <execution>
+            <parameters>
+                <parameter key="TimeMax"       value="{{ time_max }}"    comment="Total physical seconds to simulate" />
+                <parameter key="TimeOut"       value="{{ time_out }}"    comment="Frame save interval (s)" />
+                <parameter key="ViscoTreatment" value="1"                comment="Artificial viscosity" />
+                <parameter key="Visco"          value="0.01"             comment="Viscosity value" />
+            </parameters>
+        </execution>
+    </casedef>
+</case>

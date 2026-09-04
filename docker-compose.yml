@@ -1,0 +1,150 @@
+# CyberFlares — full stack for local dev and demo.
+#
+#   docker compose up -d --build
+#
+# Once up:
+#   http://localhost               → landing page  (nginx)
+#   http://localhost/app/          → React frontend (Vite dev server, HMR)
+#   http://localhost/api/docs      → FastAPI swagger
+#   http://localhost:5173          → direct Vite dev (bypasses nginx)
+#   http://localhost:5555          → Celery Flower dashboard
+#   http://localhost:9001          → MinIO console  (cfadmin / cfadmincfadmin)
+
+services:
+  # ─────────────────────────────────────────────────────────────
+  # Reverse proxy / TLS terminator / static host
+  # ─────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: cf-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+      - frontend
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────
+  # React + Vite (dev mode with HMR; bind-mounted for edit-and-refresh)
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: cf-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules              # keep container's node_modules from being shadowed
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true       # bind-mount FS notifications on Windows
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────
+  # FastAPI application
+  # ─────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cf-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/scripts:/app/scripts:ro
+      - sim_data:/app/data
+    depends_on:
+      redis:      { condition: service_healthy }
+      postgis:    { condition: service_healthy }
+      minio:      { condition: service_healthy }
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────
+  # Celery worker
+  # ─────────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cf-worker
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=2
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/scripts:/app/scripts:ro
+      - sim_data:/app/data
+    depends_on:
+      redis:      { condition: service_healthy }
+      postgis:    { condition: service_healthy }
+      minio:      { condition: service_healthy }
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cf-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: cf-postgis
+    environment:
+      POSTGRES_USER: cyberflares
+      POSTGRES_PASSWORD: cyberflares
+      POSTGRES_DB: cyberflares
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cyberflares -d cyberflares"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: cf-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: cfadmin
+      MINIO_ROOT_PASSWORD: cfadmincfadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  flower:
+    image: mher/flower:2.0
+    container_name: cf-flower
+    command: celery --broker=redis://redis:6379/1 flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  miniodata:
+  sim_data:

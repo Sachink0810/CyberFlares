@@ -1,2 +1,32 @@
-*.pdf
+# Data / simulations
+backend/data/simulations/
+backend/data/dems/
+backend/data/cache/
 famdeb_data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large binaries kept out of git
+*.pdf

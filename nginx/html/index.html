@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CyberFlares</title>
+<style>
+  :root { color-scheme: dark; }
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:#0b1220;color:#e6edf7;}
+  main{max-width:820px;margin:0 auto;padding:64px 24px;}
+  h1{font-size:34px;margin:0 0 4px;}
+  .tag{color:#7aa2ff;letter-spacing:.12em;font-size:12px;text-transform:uppercase;margin-bottom:24px;}
+  p{line-height:1.55;color:#b6c2d9;}
+  a{color:#e6edf7;text-decoration:none;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:24px;}
+  .card{border:1px solid #23324f;border-radius:10px;padding:14px 16px;background:#0f1a30;transition:.15s;}
+  .card:hover{border-color:#5b8def;transform:translateY(-1px);}
+  .card b{display:block;margin-bottom:4px;}
+  .card small{color:#90a0bd;}
+  .primary{background:#5b8def;border-color:#5b8def;color:white;font-weight:600;}
+  .primary:hover{background:#3f6dd6;border-color:#3f6dd6;}
+</style>
+</head>
+<body>
+<main>
+  <div class="tag">SIH 26161 · NTRO</div>
+  <h1>CyberFlares</h1>
+  <p>Dam-break inundation and near-real-time flood monitoring for Indian river basins.</p>
+
+  <div class="grid">
+    <a class="card primary" href="/app/"><b>Open dashboard →</b><small>/app/</small></a>
+    <a class="card" href="/api/docs"><b>API · Swagger</b><small>/api/docs</small></a>
+    <a class="card" href="/api/health"><b>Health probe</b><small>/api/health</small></a>
+    <a class="card" href="http://localhost:5555"><b>Celery · Flower</b><small>:5555</small></a>
+    <a class="card" href="http://localhost:9001"><b>MinIO console</b><small>:9001</small></a>
+  </div>
+</main>
+</body>
+</html>

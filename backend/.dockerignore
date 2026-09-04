@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+data/simulations
+data/cache
+data/dems
+.env
+.env.local
+.git
+.pytest_cache
+*.egg-info

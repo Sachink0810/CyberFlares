@@ -1,0 +1,48 @@
+# Web
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# Async jobs
+celery==5.4.0
+redis==5.0.8
+
+# Templating
+jinja2==3.1.4
+
+# Numerics
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.2
+
+# Geospatial (all have prebuilt wheels for cp311-linux)
+rasterio==1.3.11
+numpy-stl==3.1.2
+geopandas==1.0.1
+shapely==2.0.6
+pyproj==3.6.1
+fiona==1.9.6
+
+# Hydro-enforcement (Phase 2 addon)
+# richdem — no PyPI wheel for py311; will install from conda-forge or apt later.
+
+# Google Earth Engine
+earthengine-api==1.1.2
+geemap==0.34.3
+
+# Post-processing (VTK reading)
+pyvista==0.44.1
+xarray==2024.7.0
+netCDF4==1.7.1
+
+# OSM fetch
+overpy==0.7
+
+# HTTP
+httpx==0.27.2
+requests==2.32.3
+
+# Object storage
+minio==7.2.8
