@@ -13,15 +13,13 @@ function NumberField({
     <div>
       <label className="label flex justify-between">
         <span>{label}</span>
-        {unit && <span className="text-muted normal-case tracking-normal">{unit}</span>}
+        {unit && <span className="text-steel normal-case tracking-normal text-[10px]">{unit}</span>}
       </label>
       <input
         className="input tabular-nums"
         type="number"
         value={value as number}
-        step={step}
-        min={min}
-        max={max}
+        step={step} min={min} max={max}
         onChange={(e) => setK(k, parseFloat(e.target.value) as never)}
       />
     </div>
@@ -40,9 +38,18 @@ export default function ParameterPanel() {
   };
 
   return (
-    <aside className="w-[320px] shrink-0 border-r border-line bg-ink-800/40 p-4 flex flex-col gap-4 overflow-y-auto">
+    <aside className="w-[320px] shrink-0 border-r border-white/[.06]
+                      bg-graphite/60 backdrop-blur-sm
+                      p-5 flex flex-col gap-5 overflow-y-auto">
       <div>
-        <label className="label">Preset case</label>
+        <div className="eyebrow mb-1">Case</div>
+        <h2 className="fs-serif text-2xl leading-tight text-cream mb-4">
+          Configure breach.
+        </h2>
+      </div>
+
+      <div>
+        <label className="label">Preset</label>
         <select
           className="input"
           value={
@@ -67,18 +74,16 @@ export default function ParameterPanel() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <NumberField label="Dam latitude" k="dam_lat" step={0.001} unit="°N" />
-        <NumberField label="Dam longitude" k="dam_lon" step={0.001} unit="°E" />
+        <NumberField label="Latitude" k="dam_lat" step={0.001} unit="°N" />
+        <NumberField label="Longitude" k="dam_lon" step={0.001} unit="°E" />
       </div>
 
-      <div className="border-t border-line pt-4">
-        <div className="text-xs uppercase tracking-wider text-brand-400 mb-3">
-          Breach parameters
-        </div>
+      <div className="border-t border-white/[.06] pt-5">
+        <div className="eyebrow mb-3">Breach parameters</div>
         <div className="flex flex-col gap-3">
           <NumberField label="Water height H_w" k="H_w" step={0.1} min={0.1} unit="m" />
-          <NumberField label="Reservoir vol. V_w" k="V_w_mcm" step={0.5} min={0.1} unit="Mm³" />
-          <NumberField label="Erodibility δ" k="delta" step={0.05} min={0.5} max={3.0} unit="1.0=high" />
+          <NumberField label="Reservoir V_w" k="V_w_mcm" step={0.5} min={0.1} unit="Mm³" />
+          <NumberField label="Erodibility δ" k="delta" step={0.05} min={0.5} max={3.0} unit="1.0 = high" />
           <div className="grid grid-cols-2 gap-3">
             <NumberField label="α plateau" k="alpha" step={0.01} min={0} max={0.5} />
             <NumberField label="β transition" k="beta" step={0.01} min={0} max={1} />
@@ -86,7 +91,7 @@ export default function ParameterPanel() {
         </div>
       </div>
 
-      <button className="btn btn-ghost w-full justify-center" onClick={reset}>
+      <button className="btn btn-ghost w-full justify-center mt-1" onClick={reset}>
         Reset to Machchhu-II
       </button>
     </aside>

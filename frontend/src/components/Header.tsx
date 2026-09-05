@@ -1,4 +1,5 @@
-import { Waves, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Activity } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHealth } from "../api/client";
 
@@ -10,31 +11,35 @@ export default function Header() {
   });
 
   const ok = data?.status === "ok";
-  const dot = isError
-    ? "bg-danger"
-    : ok
-    ? "bg-emerald-400"
-    : "bg-yellow-400";
+  const dotClass = isError ? "bg-ember" : ok ? "bg-water" : "bg-steel";
 
   return (
-    <header className="flex items-center justify-between px-5 py-3 border-b border-line bg-ink-800/60 backdrop-blur">
-      <div className="flex items-center gap-2.5">
-        <Waves className="text-brand-400" size={20} />
-        <div>
-          <div className="font-semibold leading-4">CyberFlares</div>
-          <div className="text-[11px] text-muted leading-3 mt-0.5">
-            NTRO · SIH 26161 · Dam-break inundation
-          </div>
-        </div>
-      </div>
+    <header className="relative z-20 border-b border-white/[.06]
+                       bg-abyss/60 backdrop-blur">
+      <div className="flex items-center justify-between px-6 py-3.5">
+        <Link to="/" className="flex items-baseline gap-3">
+          <span className="fs-serif text-[22px] leading-none text-cream tracking-tight">
+            CyberFlares
+          </span>
+          <span className="hidden sm:inline text-[10px] uppercase tracking-[.28em] text-mist">
+            FLOOD // SIM · Console
+          </span>
+        </Link>
 
-      <div className="flex items-center gap-4 text-xs text-muted">
-        <a href="/api/docs" target="_blank" className="hover:text-brand-400 flex items-center gap-1.5">
-          <Activity size={12} /> API
-        </a>
-        <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${dot}`} />
-          <span>{isError ? "API offline" : ok ? "API healthy" : "…"}</span>
+        <div className="flex items-center gap-6 text-xs text-mist">
+          <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer"
+             className="hover:text-cream transition-colors flex items-center gap-1.5">
+            <Activity size={12} /> API
+          </a>
+          <Link to="/" className="hover:text-cream transition-colors">
+            Landing
+          </Link>
+          <div className="flex items-center gap-2">
+            <span className={`w-1.5 h-1.5 rounded-full ${dotClass} ${!isError && ok ? "animate-pulse" : ""}`} />
+            <span className="uppercase tracking-[.18em]">
+              {isError ? "offline" : ok ? "online" : "…"}
+            </span>
+          </div>
         </div>
       </div>
     </header>

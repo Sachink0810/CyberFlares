@@ -7,12 +7,12 @@ import { createSimulation, getSimulation } from "../api/client";
 import type { Engine, JobStatus } from "../types";
 
 const STATUS_META: Record<JobStatus, { color: string; label: string; Icon: any }> = {
-  queued:                 { color: "text-muted",      label: "Queued",          Icon: Clock },
-  running:                { color: "text-brand-400",  label: "Running",         Icon: Loader2 },
-  awaiting_external_gpu:  { color: "text-yellow-400", label: "Awaiting GPU",    Icon: Server },
-  completed:              { color: "text-emerald-400",label: "Completed",       Icon: CheckCircle2 },
-  failed:                 { color: "text-danger",     label: "Failed",          Icon: CheckCircle2 },
-  cancelled:              { color: "text-muted",      label: "Cancelled",       Icon: CheckCircle2 },
+  queued:                { color: "text-mist",  label: "Queued",       Icon: Clock },
+  running:               { color: "text-water", label: "Running",      Icon: Loader2 },
+  awaiting_external_gpu: { color: "text-ember", label: "Awaiting GPU", Icon: Server },
+  completed:             { color: "text-water", label: "Completed",    Icon: CheckCircle2 },
+  failed:                { color: "text-ember", label: "Failed",       Icon: CheckCircle2 },
+  cancelled:             { color: "text-mist",  label: "Cancelled",    Icon: CheckCircle2 },
 };
 
 export default function SimulationPanel() {
@@ -26,8 +26,7 @@ export default function SimulationPanel() {
   const create = useMutation({
     mutationFn: () =>
       createSimulation({
-        dam,
-        engine,
+        dam, engine,
         near_field_radius_km: nearKm,
         far_field_radius_km: farKm,
         dp_meters: dp,
@@ -53,27 +52,27 @@ export default function SimulationPanel() {
   return (
     <div className="card flex flex-col gap-3">
       <div>
-        <div className="text-sm font-semibold">Full simulation</div>
-        <div className="text-xs text-muted">
-          Runs breach → DEM crop → STL → Case_Def.xml → SPH inputs staged for GPU.
+        <div className="eyebrow mb-0.5">Pipeline</div>
+        <div className="fs-serif text-lg text-cream leading-tight">
+          Run full simulation
+        </div>
+        <div className="text-[11px] text-mist mt-0.5">
+          Breach → DEM crop → STL → Case_Def.xml → SPH inputs staged for GPU.
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <div>
           <label className="label">Engine</label>
-          <select
-            className="input"
-            value={engine}
-            onChange={(e) => setEngine(e.target.value as Engine)}
-          >
+          <select className="input" value={engine}
+                  onChange={(e) => setEngine(e.target.value as Engine)}>
             <option value="both">SPH + Delft3D</option>
             <option value="sph">SPH only</option>
             <option value="delft3d">Delft3D only</option>
           </select>
         </div>
         <div>
-          <label className="label">Near-field km</label>
+          <label className="label">Near-field</label>
           <input className="input" type="number" step={0.5} min={1}
                  value={nearKm} onChange={(e) => setNearKm(+e.target.value)} />
         </div>
@@ -103,46 +102,40 @@ export default function SimulationPanel() {
       </div>
 
       {job && meta && (
-        <div className="bg-ink-900 border border-line rounded-lg p-3 flex flex-col gap-2">
+        <div className="bg-abyss/70 border border-white/[.06] rounded-lg p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className={`flex items-center gap-2 text-sm font-medium ${meta.color}`}>
               <meta.Icon size={14} className={job.status === "running" ? "animate-spin" : ""} />
               {meta.label}
             </div>
-            <code className="text-[10px] text-muted">{job.id}</code>
+            <code className="text-[10px] text-mist">{job.id}</code>
           </div>
           <div>
-            <div className="flex justify-between text-[11px] text-muted mb-1">
+            <div className="flex justify-between text-[11px] text-mist mb-1">
               <span>{job.phase}</span>
               <span>{job.progress}%</span>
             </div>
-            <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden">
+            <div className="h-1 bg-white/[.06] rounded-full overflow-hidden">
               <div
-                className="h-full bg-brand-500 transition-all"
+                className="h-full bg-ember transition-all"
                 style={{ width: `${job.progress}%` }}
               />
             </div>
           </div>
           {job.status === "awaiting_external_gpu" && (
-            <div className="text-[11px] text-muted leading-4">
+            <div className="text-[11px] text-mist leading-4">
               Copy&nbsp;
-              <code className="text-brand-400">
-                data/simulations/{job.id}/sph/inputs/
-              </code>
+              <code className="text-water">data/simulations/{job.id}/sph/inputs/</code>
               &nbsp;to the GPU laptop and run{" "}
-              <code className="text-brand-400">scripts/run_sph_on_gpu.py</code>.
+              <code className="text-water">scripts/run_sph_on_gpu.py</code>.
             </div>
           )}
-          {job.error && (
-            <div className="text-[11px] text-danger">{job.error}</div>
-          )}
+          {job.error && <div className="text-[11px] text-ember">{job.error}</div>}
         </div>
       )}
 
       {create.isError && (
-        <div className="text-xs text-danger">
-          Failed to enqueue — check the API logs.
-        </div>
+        <div className="text-xs text-ember">Failed to enqueue — check the API logs.</div>
       )}
     </div>
   );

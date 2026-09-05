@@ -17,6 +17,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/dashboard" element={<App />} />
+          {/* Old /landing link kept working */}
+          <Route path="/landing" element={<Landing />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
