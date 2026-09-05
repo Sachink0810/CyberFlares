@@ -5,16 +5,24 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# ── Path resolution ─────────────────────────────────────────────
+# This file lives at  <root>/app/core/config.py
+#   * in the container: <root> = /app             (WORKDIR)
+#   * during local dev: <root> = <repo>/backend
+# So parents[2] is the correct project root in both.
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Paths (inside the container: /app/data)
-    project_root: Path = Path(__file__).resolve().parents[3]
-    data_dir: Path = project_root / "data"
-    sim_dir: Path = data_dir / "simulations"
-    dem_dir: Path = data_dir / "dems"
-    cache_dir: Path = data_dir / "cache"
-    precomputed_dir: Path = data_dir / "precomputed"
+    # Paths (container: /app/data; dev: backend/data)
+    project_root: Path = _PROJECT_ROOT
+    data_dir: Path = _PROJECT_ROOT / "data"
+    sim_dir: Path = _PROJECT_ROOT / "data" / "simulations"
+    dem_dir: Path = _PROJECT_ROOT / "data" / "dems"
+    cache_dir: Path = _PROJECT_ROOT / "data" / "cache"
+    precomputed_dir: Path = _PROJECT_ROOT / "data" / "precomputed"
 
     # Redis / Celery
     redis_url: str = "redis://redis:6379/0"

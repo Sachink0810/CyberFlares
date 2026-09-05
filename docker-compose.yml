@@ -26,9 +26,10 @@ services:
     volumes:
       - ./backend/app:/app/app:ro
       - ./backend/scripts:/app/scripts:ro
-      - sim_data:/app/data
-      # Google Earth Engine credentials from the host (`earthengine authenticate`).
-      # ${USERPROFILE} resolves to C:\Users\<you> on Windows.
+      # Bind-mount the data dir directly — so files dropped into
+      # backend/data/precomputed/... on Windows are visible instantly
+      # inside the container.
+      - ./backend/data:/app/data
       - ${USERPROFILE}/.config/earthengine:/root/.config/earthengine:ro
     depends_on:
       redis:      { condition: service_healthy }
@@ -46,7 +47,7 @@ services:
     volumes:
       - ./backend/app:/app/app:ro
       - ./backend/scripts:/app/scripts:ro
-      - sim_data:/app/data
+      - ./backend/data:/app/data
       - ${USERPROFILE}/.config/earthengine:/root/.config/earthengine:ro
     depends_on:
       redis:      { condition: service_healthy }
@@ -113,4 +114,4 @@ services:
 volumes:
   pgdata:
   miniodata:
-  sim_data:
+  # sim_data volume removed — data now bind-mounted from ./backend/data

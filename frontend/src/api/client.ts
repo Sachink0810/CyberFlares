@@ -22,7 +22,7 @@ export const getDam = (id: string) =>
 export const breachPreview = (p: DamParameters) =>
   api.post<BreachResult>("/breach/preview", p).then(r => r.data);
 
-// ── Simulations (SPH + Delft3D pipeline) ──
+// ── Simulations ──
 export const createSimulation = (req: SimulationRequest) =>
   api.post<JobSummary>("/simulations", req).then(r => r.data);
 
@@ -32,7 +32,7 @@ export const getSimulation = (id: string) =>
 export const listSimulations = () =>
   api.get<JobSummary[]>("/simulations").then(r => r.data);
 
-// ── NRT SAR ──
+// ── NRT SAR — live jobs ──
 export const startSarAnalysis = (req: SARFloodRequest) =>
   api.post<JobSummary>("/nrt/sar", req).then(r => r.data);
 
@@ -43,4 +43,35 @@ export const sarArtifactUrl = (id: string, artifact: string) =>
   `${BASE}/nrt/sar/${id}/download/${artifact}`;
 
 export const fetchSarGeoJSON = (id: string) =>
-  api.get(sarArtifactUrl(id, "geojson").replace(BASE, "")).then(r => r.data);
+  api.get(`/nrt/sar/${id}/download/geojson`).then(r => r.data);
+
+// ── NRT SAR — cached presets (instant demo path) ──
+export interface SARPresetEntry {
+  key: string;
+  event_name: string;
+  center_lat: number;
+  center_lon: number;
+  radius_km: number;
+  start_date: string;
+  end_date: string;
+  note: string;
+  change_detection: boolean;
+  pass_direction: string;
+  cached: boolean;             // true if geojson OR html is cached
+  geojson_cached: boolean;
+  html_cached: boolean;
+  artifacts?: Record<string, string>;
+  summary?: { threshold?: number; area_hectares?: number; orbit?: unknown };
+}
+
+export const cachedPresetHtmlUrl = (key: string) =>
+  `${BASE}/nrt/sar/presets/${key}/view`;
+
+export const listSarPresets = () =>
+  api.get<SARPresetEntry[]>("/nrt/sar/presets").then(r => r.data);
+
+export const fetchCachedPresetGeoJSON = (key: string) =>
+  api.get<GeoJSON.FeatureCollection>(`/nrt/sar/presets/${key}/geojson`).then(r => r.data);
+
+export const cachedPresetArtifactUrl = (key: string, artifact: string) =>
+  `${BASE}/nrt/sar/presets/${key}/download/${artifact}`;

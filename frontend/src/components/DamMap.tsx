@@ -4,10 +4,11 @@ import { Map as MLMap, Marker, Popup, NavigationControl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Layers, Mountain, Radar, MapPin, Play, Pause, RotateCcw } from "lucide-react";
 
-import { listDams, breachPreview } from "../api/client";
+import { listDams, breachPreview, cachedPresetHtmlUrl } from "../api/client";
 import { useDam } from "../store/damStore";
 import { useTimeline } from "../store/timelineStore";
 import { useSar } from "../store/sarStore";
+import SarPresetChips from "./SarPresetChips";
 import type { DamInfo, DamParameters } from "../types";
 
 type LayerMode = "terrain" | "domain" | "flood";
@@ -81,7 +82,11 @@ export default function DamMap() {
   const setK = useDam((s) => s.set);
   const dam = useDam((s) => s.dam);
   const sarGeoJSON = useSar((s) => s.geojson);
+  const activePreset = useSar((s) => s.activePreset);
   const hasFlood = !!sarGeoJSON && sarGeoJSON.features?.length > 0;
+  const hasEngineHtml = !!activePreset?.html_cached;
+  const [engineView, setEngineView] = useState(false);
+  useEffect(() => { if (!hasEngineHtml) setEngineView(false); }, [hasEngineHtml]);
 
   const { data: dams, isLoading } = useQuery({
     queryKey: ["dams"],
@@ -581,6 +586,31 @@ export default function DamMap() {
           {isLoading ? "loading…" : `${dams?.length ?? 0} dams in registry`}
         </div>
       </div>
+
+      {/* Cached-flood preset chip HUD (top-centre of the map) */}
+      <SarPresetChips mapRef={mapRef} />
+
+      {/* "Engine view" — opens the geemap-rendered flood map in a new tab.
+          Opening in-page as an iframe blocks EE's tile fetches in some
+          browsers, and the full-window standalone view is what makes the
+          flood layer visible cleanly. */}
+      {hasEngineHtml && activePreset && (
+        <div className="absolute z-20 bottom-[130px] right-3 pointer-events-auto">
+          <a
+            href={cachedPresetHtmlUrl(activePreset.key)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-abyss/85 backdrop-blur border border-white/[.06]
+                       rounded-md px-3 py-1.5 text-[11px] uppercase
+                       tracking-[.14em] text-water hover:text-cream
+                       hover:bg-water/15 hover:border-water/40 inline-flex
+                       items-center gap-1.5 transition"
+            title="Open the engine's interactive flood map in a new tab"
+          >
+            Engine view ↗
+          </a>
+        </div>
+      )}
 
       <div ref={mapEl} className="flex-1 w-full h-full" />
     </div>

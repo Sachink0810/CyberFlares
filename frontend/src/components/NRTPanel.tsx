@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Satellite, Loader2, CheckCircle2, AlertCircle, Download } from "lucide-react";
+import {
+  Satellite, Loader2, CheckCircle2, AlertCircle, Download, MapPin,
+} from "lucide-react";
 
 import { useDam } from "../store/damStore";
 import { useSar } from "../store/sarStore";
@@ -9,32 +11,94 @@ import {
 } from "../api/client";
 import type { PassDirection } from "../types";
 
+// ── Preset historic flood events (real Indian test cases) ───────────
+interface SARPreset {
+  key: string;
+  event_name: string;
+  center_lat: number;
+  center_lon: number;
+  radius_km: number;
+  start_date: string;
+  end_date: string;
+  note?: string;
+}
+
+const SAR_PRESETS: SARPreset[] = [
+  {
+    key: "godavari-2022",
+    event_name: "Godavari_Forest_Flood",
+    center_lat: 17.35, center_lon: 81.55, radius_km: 25,
+    start_date: "2022-07-13", end_date: "2022-07-25",
+    note: "Andhra Pradesh forest catchment · Jul 2022",
+  },
+  {
+    key: "kerala-2018",
+    event_name: "Kerala_Mixed_Flood",
+    center_lat: 10.10, center_lon: 76.35, radius_km: 15,
+    start_date: "2018-08-15", end_date: "2018-08-25",
+    note: "Kerala floods · Aug 2018",
+  },
+  {
+    key: "tiware-2019",
+    event_name: "Tiware",
+    center_lat: 17.5, center_lon: 73.5, radius_km: 50,
+    start_date: "2019-07-02", end_date: "2019-08-15",
+    note: "Tiware dam breach · Maharashtra · Jul 2019",
+  },
+];
+
 /**
- * NRT SAR panel — Google Earth Engine-based Sentinel-1 flood mapper.
- * AOI defaults to the currently-selected dam. On success, the resulting
- * GeoJSON populates useSar so the map can overlay it as the "Flood"
- * layer.
+ * NRT SAR panel — Google Earth Engine Sentinel-1 flood mapper.
+ * Selecting a preset overrides the AOI center; leaving "custom (from dam)"
+ * uses the currently selected dam's coordinates.
  */
 export default function NRTPanel() {
   const dam = useDam((s) => s.dam);
   const { jobId, job, set: setSar, clear } = useSar();
 
+  const [presetKey, setPresetKey] = useState<string>("");
   const [projectId, setProjectId] = useState<string>(
-    (import.meta.env.VITE_GEE_PROJECT_ID as string | undefined) ?? ""
+    (import.meta.env.VITE_GEE_PROJECT_ID as string | undefined) ?? "sih-26161"
   );
+  const [eventName, setEventName] = useState<string>("");
   const [radiusKm, setRadiusKm] = useState(20);
   const [startDate, setStartDate] = useState(defaultStart());
   const [endDate, setEndDate] = useState(defaultEnd());
   const [pass, setPass] = useState<PassDirection>("AUTO");
   const [changeDet, setChangeDet] = useState(true);
+  const [overrideLat, setOverrideLat] = useState<number | null>(null);
+  const [overrideLon, setOverrideLon] = useState<number | null>(null);
+
+  // ── Preset selection ──
+  function applyPreset(key: string) {
+    setPresetKey(key);
+    if (!key) {
+      setOverrideLat(null); setOverrideLon(null);
+      setEventName("");
+      return;
+    }
+    const p = SAR_PRESETS.find((x) => x.key === key);
+    if (!p) return;
+    setEventName(p.event_name);
+    setOverrideLat(p.center_lat);
+    setOverrideLon(p.center_lon);
+    setRadiusKm(p.radius_km);
+    setStartDate(p.start_date);
+    setEndDate(p.end_date);
+  }
+
+  const centerLat = overrideLat ?? dam.dam_lat;
+  const centerLon = overrideLon ?? dam.dam_lon;
+  const effectiveEvent =
+    eventName || `${slug(dam.name)}_${startDate.replaceAll("-", "")}`;
 
   const start = useMutation({
     mutationFn: () =>
       startSarAnalysis({
         project_id: projectId,
-        event_name: `${slug(dam.name)}_${startDate.replaceAll("-", "")}`,
-        center_lat: dam.dam_lat,
-        center_lon: dam.dam_lon,
+        event_name: effectiveEvent,
+        center_lat: centerLat,
+        center_lon: centerLon,
         radius_km: radiusKm,
         start_date: startDate,
         end_date: endDate,
@@ -44,7 +108,6 @@ export default function NRTPanel() {
     onSuccess: (j) => setSar({ jobId: j.id, job: j, geojson: null }),
   });
 
-  // Poll until terminal
   const poll = useQuery({
     queryKey: ["sar-job", jobId],
     queryFn: () => pollSarAnalysis(jobId!),
@@ -60,7 +123,6 @@ export default function NRTPanel() {
     if (poll.data) setSar({ job: poll.data });
   }, [poll.data, setSar]);
 
-  // Once completed, pull the geojson once so the map can render it.
   useEffect(() => {
     if (!jobId || !poll.data || poll.data.status !== "completed") return;
     if (useSar.getState().geojson) return;
@@ -82,23 +144,34 @@ export default function NRTPanel() {
         <div className="text-[11px] text-mist mt-0.5">
           Edge Otsu · Markert et al. (2020) · Google Earth Engine
         </div>
+        <div className="text-[10px] text-steel mt-1 leading-relaxed">
+          For instant demo results, use the <span className="text-water">
+          cached-event chips</span> on the map. This panel runs a fresh
+          GEE analysis (30 s – 2 min).
+        </div>
       </div>
 
       {/* GCP project */}
       <div>
         <label className="label">GCP project</label>
-        <input
-          className="input"
-          placeholder="my-gcp-project"
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-        />
-        {!projectId && (
-          <div className="text-[10px] text-steel mt-1 leading-tight">
-            Set once via <code className="text-water">VITE_GEE_PROJECT_ID</code> in
-            your <code className="text-water">.env</code> to skip this field.
-          </div>
-        )}
+        <input className="input" placeholder="sih-26161"
+               value={projectId} onChange={(e) => setProjectId(e.target.value)} />
+      </div>
+
+      {/* Event name */}
+      <div>
+        <label className="label">Event name (output prefix)</label>
+        <input className="input" placeholder={effectiveEvent}
+               value={eventName} onChange={(e) => setEventName(e.target.value)} />
+      </div>
+
+      {/* Effective AOI center */}
+      <div className="rounded-md border border-white/[.05] bg-abyss/60 px-3 py-2 text-[11px] text-mist flex items-center gap-2">
+        <MapPin size={11} className="text-water" />
+        <span className="uppercase tracking-[.16em] text-[9.5px]">AOI centre</span>
+        <span className="ml-auto tabular-nums text-cream">
+          {centerLat.toFixed(3)}° N · {centerLon.toFixed(3)}° E
+        </span>
       </div>
 
       {/* Date range */}
@@ -157,8 +230,8 @@ export default function NRTPanel() {
         </button>
         <button
           className="btn btn-ghost justify-center"
-          disabled={!jobId}
-          onClick={clear}
+          disabled={!jobId && !presetKey}
+          onClick={() => { clear(); applyPreset(""); }}
         >
           Clear
         </button>
@@ -198,7 +271,7 @@ export default function NRTPanel() {
               {job.manifest_summary.threshold !== undefined && (<>
                 <span className="text-mist">Otsu threshold</span>
                 <span className="fs-serif text-cream">
-                  {job.manifest_summary.threshold.toFixed(2)} dB
+                  {Number(job.manifest_summary.threshold).toFixed(2)} dB
                 </span>
               </>)}
               {typeof job.manifest_summary.area_hectares === "number" && (<>
@@ -244,12 +317,9 @@ export default function NRTPanel() {
   );
 }
 
-function defaultEnd() {
-  return new Date().toISOString().slice(0, 10);
-}
+function defaultEnd() { return new Date().toISOString().slice(0, 10); }
 function defaultStart() {
-  const d = new Date();
-  d.setDate(d.getDate() - 5);
+  const d = new Date(); d.setDate(d.getDate() - 5);
   return d.toISOString().slice(0, 10);
 }
 function slug(s: string) {
