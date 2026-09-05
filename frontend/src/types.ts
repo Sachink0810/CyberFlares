@@ -9,6 +9,20 @@ export interface DamParameters {
   beta: number;
 }
 
+export interface DamInfo {
+  id: string;
+  name: string;
+  state: string;
+  river: string;
+  type: string;
+  dam_lat: number;
+  dam_lon: number;
+  H_w: number;
+  V_w_mcm: number;
+  delta: number;
+  note?: string;
+}
+
 export interface HydrographPoint {
   t_seconds: number;
   t_hours: number;

@@ -10,15 +10,15 @@
 
 @layer components {
   /* ---------- FLOOD//SIM landing page ---------- */
-  .fs-root {
-    font-family: theme("fontFamily.sans");
-  }
+  .fs-root { font-family: theme("fontFamily.sans"); }
+
   @media (pointer: fine) {
     .fs-cursor-none,
     .fs-cursor-none * {
       cursor: none !important;
     }
   }
+
   .fs-grain {
     position: fixed;
     inset: -60%;
@@ -31,33 +31,41 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
     background-size: 140px 140px;
   }
+
   .fs-serif {
     font-family: theme("fontFamily.serif");
     font-feature-settings: normal;
   }
 
+  /* ---------- Dashboard (FLOOD//SIM aesthetic) ---------- */
   .card {
-    @apply bg-ink-800 border border-line rounded-xl p-4;
+    @apply bg-graphite/70 border border-white/[.06] rounded-xl p-4 backdrop-blur-sm;
   }
   .input {
-    @apply w-full bg-ink-900 border border-line rounded-md px-3 py-1.5
-           text-text text-sm focus:outline-none focus:border-brand-400;
+    @apply w-full bg-abyss border border-white/[.08] rounded-md px-3 py-1.5
+           text-cream text-sm placeholder:text-steel
+           focus:outline-none focus:border-water/60;
   }
   .label {
-    @apply block text-xs uppercase tracking-wider text-muted mb-1;
+    @apply block text-[10px] uppercase tracking-[.18em] text-mist mb-1;
   }
   .btn {
     @apply inline-flex items-center gap-2 px-3.5 py-2 rounded-md
            text-sm font-medium transition-colors
-           bg-brand-500 hover:bg-brand-600 text-white disabled:opacity-40
-           disabled:cursor-not-allowed;
+           bg-ember hover:bg-ember/85 text-abyss
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-ghost {
-    @apply bg-transparent border border-line text-text hover:bg-ink-700;
+    @apply bg-transparent border border-white/[.08] text-cream hover:bg-white/[.04];
   }
   .kpi {
-    @apply flex flex-col gap-1 bg-ink-900 border border-line rounded-lg px-3 py-2;
+    @apply flex flex-col gap-1 bg-abyss/70 border border-white/[.06] rounded-lg px-3 py-2;
   }
-  .kpi-value { @apply text-lg font-semibold text-text tabular-nums; }
-  .kpi-label { @apply text-[10px] uppercase tracking-widest text-muted; }
+  .kpi-value { @apply text-lg text-cream tabular-nums fs-serif; }
+  .kpi-label { @apply text-[10px] uppercase tracking-[.18em] text-mist; }
+
+  /* Section eyebrow — small caps label above serif headings */
+  .eyebrow {
+    @apply text-[10px] uppercase tracking-[.22em] text-water;
+  }
 }
