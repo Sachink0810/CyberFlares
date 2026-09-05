@@ -8,6 +8,7 @@ import { listDams, breachPreview } from "../api/client";
 import { useDam } from "../store/damStore";
 import { useTimeline } from "../store/timelineStore";
 import { useSar } from "../store/sarStore";
+import { useSelection } from "../store/selectionStore";
 import type { DamInfo, DamParameters } from "../types";
 
 type LayerMode = "terrain" | "domain" | "flood";
@@ -74,9 +75,11 @@ export default function DamMap() {
   const mapEl = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MLMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>("machchhu-ii");
+  const selectedId = useSelection((s) => s.selectedId);
+  const setSelectedId = useSelection((s) => s.setSelectedId);
   const [layerMode, setLayerMode] = useState<LayerMode>("terrain");
   const flownRef = useRef(false);
+  const selInitRef = useRef(false);
 
   const setK = useDam((s) => s.set);
   const dam = useDam((s) => s.dam);
@@ -361,7 +364,7 @@ export default function DamMap() {
           </div>
         `);
 
-      el.onclick = (e) => { e.stopPropagation(); selectDam(d); };
+      el.onclick = (e) => { e.stopPropagation(); setSelectedId(d.id); };
 
       const mk = new Marker({ element: el, anchor: "center" })
         .setLngLat([d.dam_lon, d.dam_lat])
@@ -399,20 +402,27 @@ export default function DamMap() {
     (m.getSource("far-domain")  as any)?.setData(circleGeoJSON(d.dam_lon, d.dam_lat, 50));
   }
 
-  function selectDam(d: DamInfo) {
-    setSelectedId(d.id);
+  // React to selection changes from *either* a marker click or the
+  // sidebar registry (both just call setSelectedId — this is the one
+  // place that applies params + flies the map). Skipped on the very
+  // first run so the initial load stays driven by the auto-fly effect
+  // above, preserving the original boot behaviour exactly.
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m || !dams) return;
+    if (!selInitRef.current) { selInitRef.current = true; return; }
+    const d = dams.find((x) => x.id === selectedId);
+    if (!d) return;
     stop();
     (["name","dam_lat","dam_lon","H_w","V_w_mcm","delta"] as (keyof DamParameters)[])
       .forEach((k) => setK(k, (d as any)[k]));
-    const m = mapRef.current;
-    if (!m) return;
     const push = () => {
       pushDomainCircles(d);
       m.flyTo({ center: [d.dam_lon, d.dam_lat],
                 zoom: 10.5, pitch: 55, bearing: -22, speed: 1.1, curve: 1.6 });
     };
     if (m.isStyleLoaded()) push(); else m.once("style.load", push);
-  }
+  }, [selectedId, dams]);
 
   const resetView = () => {
     mapRef.current?.flyTo({
@@ -585,77 +595,6 @@ export default function DamMap() {
       <div ref={mapEl} className="flex-1 w-full h-full" />
     </div>
   );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Re-tint a colourful vector style (OpenFreeMap Liberty) to the
-// FLOOD//SIM dark palette. Runs once at style.load. Values chosen
-// to match the landing page: abyss land, muted teal water,
-// steel-grey roads, cream labels.
-// ─────────────────────────────────────────────────────────────
-function recolourToDarkPalette(m: MLMap) {
-  const LAND       = "#0B1113";
-  const LAND_ALT   = "#0F1719";
-  const WATER      = "#123138";
-  const WATER_LINE = "#1E4A55";
-  const ROAD_MINOR = "#1B2427";
-  const ROAD_MAJOR = "#2A363A";
-  const BUILDING   = "#141A1D";
-  const BOUNDARY   = "#2E3A3E";
-  const LABEL      = "#B7BEBE";
-  const LABEL_HALO = "#050809";
-
-  const layers = m.getStyle().layers;
-
-  for (const l of layers) {
-    const id = l.id.toLowerCase();
-    try {
-      // Backgrounds & land
-      if (l.type === "background") {
-        m.setPaintProperty(l.id, "background-color", LAND);
-      }
-      if (l.type === "fill") {
-        if (id.includes("water") || id.includes("river") || id.includes("lake") || id.includes("ocean")) {
-          m.setPaintProperty(l.id, "fill-color", WATER);
-          m.setPaintProperty(l.id, "fill-opacity", 0.9);
-        } else if (id.includes("building")) {
-          m.setPaintProperty(l.id, "fill-color", BUILDING);
-          m.setPaintProperty(l.id, "fill-opacity", 0.7);
-        } else if (id.includes("park") || id.includes("wood") || id.includes("forest") ||
-                   id.includes("landuse") || id.includes("landcover") ||
-                   id.includes("grass") || id.includes("scrub") || id.includes("residential")) {
-          m.setPaintProperty(l.id, "fill-color", LAND_ALT);
-          m.setPaintProperty(l.id, "fill-opacity", 0.55);
-        } else {
-          m.setPaintProperty(l.id, "fill-color", LAND);
-        }
-      }
-      if (l.type === "line") {
-        if (id.includes("water") || id.includes("river") || id.includes("waterway")) {
-          m.setPaintProperty(l.id, "line-color", WATER_LINE);
-          m.setPaintProperty(l.id, "line-opacity", 0.6);
-        } else if (id.includes("boundary") || id.includes("border") || id.includes("admin")) {
-          m.setPaintProperty(l.id, "line-color", BOUNDARY);
-          m.setPaintProperty(l.id, "line-opacity", 0.45);
-        } else if (id.includes("motorway") || id.includes("trunk") || id.includes("primary")) {
-          m.setPaintProperty(l.id, "line-color", ROAD_MAJOR);
-          m.setPaintProperty(l.id, "line-opacity", 0.55);
-        } else if (id.includes("road") || id.includes("street") || id.includes("path") || id.includes("rail")) {
-          m.setPaintProperty(l.id, "line-color", ROAD_MINOR);
-          m.setPaintProperty(l.id, "line-opacity", 0.4);
-        }
-      }
-      if (l.type === "symbol") {
-        m.setPaintProperty(l.id, "text-color", LABEL);
-        m.setPaintProperty(l.id, "text-halo-color", LABEL_HALO);
-        m.setPaintProperty(l.id, "text-halo-width", 1.2);
-        // Hide icons that would clash (POI dots, etc)
-        if (id.includes("poi") || id.includes("aerodrome")) {
-          m.setLayoutProperty(l.id, "visibility", "none");
-        }
-      }
-    } catch { /* some layers don't accept certain paint props — skip */ }
-  }
 }
 
 function LayerBtn({

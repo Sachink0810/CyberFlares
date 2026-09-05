@@ -50,18 +50,8 @@ export default function SimulationPanel() {
   const meta = job ? STATUS_META[job.status] : null;
 
   return (
-    <div className="card flex flex-col gap-3">
-      <div>
-        <div className="eyebrow mb-0.5">Pipeline</div>
-        <div className="fs-serif text-lg text-cream leading-tight">
-          Run full simulation
-        </div>
-        <div className="text-[11px] text-mist mt-0.5">
-          Breach → DEM crop → STL → Case_Def.xml → SPH inputs staged for GPU.
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
+    <div id="cf-run-simulation" className="px-5 py-5 flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="label">Engine</label>
           <select className="input" value={engine}
@@ -72,33 +62,48 @@ export default function SimulationPanel() {
           </select>
         </div>
         <div>
+          <label className="label">dp (m)</label>
+          <input className="input" type="number" step={0.5} min={0.5}
+                 value={dp} onChange={(e) => setDp(+e.target.value)} />
+        </div>
+        <div>
           <label className="label">Near-field</label>
           <input className="input" type="number" step={0.5} min={1}
                  value={nearKm} onChange={(e) => setNearKm(+e.target.value)} />
         </div>
         <div>
-          <label className="label">dp (m)</label>
-          <input className="input" type="number" step={0.5} min={0.5}
-                 value={dp} onChange={(e) => setDp(+e.target.value)} />
+          <label className="label">Far-field</label>
+          <input className="input" type="number" step={1} min={nearKm}
+                 value={farKm} onChange={(e) => setFarKm(+e.target.value)} />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          className="btn justify-center"
-          disabled={create.isPending || poll.isRefetching}
-          onClick={() => create.mutate()}
-        >
-          {create.isPending ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-          Run simulation
-        </button>
-        <button
-          className="btn btn-ghost justify-center"
-          onClick={() => { setJobId(null); create.reset(); }}
-          disabled={!jobId && !create.isError}
-        >
-          Clear
-        </button>
+      <div className="flex items-center justify-between text-[10px] uppercase tracking-[.16em] text-steel">
+        <span>Breach → DEM crop → STL → Case_Def.xml → SPH inputs</span>
+      </div>
+
+      <div>
+        <div className="text-[10px] uppercase tracking-[.16em] text-mist mb-2 flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-water" />
+          Model ready · {engine === "both" ? "SPH + Delft3D" : engine === "sph" ? "SPH" : "Delft3D"}
+        </div>
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <button
+            className="btn-primary"
+            disabled={create.isPending || poll.isRefetching}
+            onClick={() => create.mutate()}
+          >
+            {create.isPending ? <Loader2 size={14} className="animate-spin" /> : "Run simulation"}
+            {!create.isPending && <Play size={13} />}
+          </button>
+          <button
+            className="btn-secondary !px-3"
+            onClick={() => { setJobId(null); create.reset(); }}
+            disabled={!jobId && !create.isError}
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       {job && meta && (

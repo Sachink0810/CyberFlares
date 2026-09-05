@@ -68,4 +68,56 @@
   .eyebrow {
     @apply text-[10px] uppercase tracking-[.22em] text-water;
   }
+
+  /* ---------- Premium instrument-panel primitives ---------- */
+
+  /* Primary CTA — restrained, bright neutral surface, dark text */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md
+           text-[13px] font-medium tracking-[.02em] transition-all duration-150
+           bg-cream text-abyss hover:bg-white hover:-translate-y-px
+           active:translate-y-0
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md
+           text-[13px] font-medium tracking-[.02em] transition-colors duration-150
+           bg-transparent border border-white/[.10] text-mist
+           hover:text-cream hover:border-white/[.20]
+           disabled:opacity-35 disabled:cursor-not-allowed;
+  }
+
+  /* Small uppercase technical label */
+  .tech-label {
+    @apply text-[10px] uppercase tracking-[.18em] text-mist;
+  }
+
+  /* Thin hairline divider */
+  .hairline { @apply border-white/[.07]; }
+
+  /* Asset-registry row (dam list entries) */
+  .asset-row {
+    @apply relative flex items-center gap-3 pl-3 pr-2.5 py-2 rounded-md cursor-pointer
+           border-l-2 border-transparent transition-colors duration-150
+           hover:bg-white/[.03];
+  }
+  .asset-row.is-active {
+    @apply bg-water/[.07] border-water;
+  }
+
+  /* Measurement cell — scientific-reading style, not a card */
+  .measure {
+    @apply flex flex-col gap-1 py-2.5;
+  }
+  .measure-value { @apply fs-serif text-cream text-[22px] leading-none tabular-nums; }
+  .measure-label { @apply text-[9.5px] uppercase tracking-[.16em] text-mist; }
+
+  /* Expandable filter row (native <details>) */
+  .filter-group summary {
+    @apply flex items-center justify-between py-2 cursor-pointer select-none
+           text-[11px] uppercase tracking-[.16em] text-mist hover:text-cream
+           transition-colors;
+  }
+  .filter-group summary::-webkit-details-marker { display: none; }
+  .filter-group[open] summary { @apply text-cream; }
 }

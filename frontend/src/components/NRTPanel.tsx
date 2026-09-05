@@ -71,19 +71,17 @@ export default function NRTPanel() {
   const finished = state === "completed";
 
   return (
-    <div className="card flex flex-col gap-3">
-      <div>
-        <div className="eyebrow flex items-center gap-1.5 mb-0.5">
-          <Satellite size={11} className="text-water" /> NRT SAR
-        </div>
-        <div className="fs-serif text-xl text-cream leading-tight">
-          Sentinel-1 flood tracker
-        </div>
-        <div className="text-[11px] text-mist mt-0.5">
-          Edge Otsu · Markert et al. (2020) · Google Earth Engine
-        </div>
-      </div>
+    <details className="filter-group px-5" open={false}>
+      <summary className="!py-4">
+        <span className="flex items-center gap-2">
+          <Satellite size={12} /> Advanced · NRT SAR flood tracker
+        </span>
+        <span className="text-[9.5px] text-steel normal-case tracking-normal">
+          Sentinel-1 · Edge Otsu
+        </span>
+      </summary>
 
+      <div className="pb-5 flex flex-col gap-3">
       {/* GCP project */}
       <div>
         <label className="label">GCP project</label>
@@ -240,7 +238,8 @@ export default function NRTPanel() {
           Failed to enqueue — check API logs (or your GCP project).
         </div>
       )}
-    </div>
+      </div>
+    </details>
   );
 }
 

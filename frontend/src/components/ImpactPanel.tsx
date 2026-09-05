@@ -45,37 +45,34 @@ export default function ImpactPanel() {
   }, [rows]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="px-5 py-5">
       {/* ── Section header ── */}
-      <div>
-        <div className="eyebrow mb-0.5">Impact intelligence</div>
-        <div className="fs-serif text-xl text-cream leading-tight">
-          Breach dynamics · Q(t)
-        </div>
-        <div className="text-[11px] text-mist mt-0.5">
-          Saberi & Zenz (2015) · smoothed · mass-balanced to V<sub>w</sub>
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="tech-label">Quick impact estimate</div>
+        {isFetching && <Loader2 size={11} className="text-mist animate-spin" />}
       </div>
 
-      {/* ── Computed KPIs ── */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* ── Computed KPIs — 2×2 analytical layout ── */}
+      <div className="grid grid-cols-2 gap-x-4">
         <BigKpi value={data ? fmt(peak) : "—"}
-                unit="m³/s"     label="Peak Q" />
+                unit="m³/s"     label="Peak discharge" />
         <BigKpi value={data ? peakTime.toFixed(2) : "—"}
-                unit="h"        label="t at peak" />
+                unit="h"        label="Time to peak" />
         <BigKpi value={data ? data.breach_time_hours.toFixed(2) : "—"}
                 unit="h"        label="Breach t_f" />
         <BigKpi value={dam.V_w_mcm.toFixed(1)}
-                unit="Mm³"      label="Reservoir" />
+                unit="Mm³"      label="Reservoir volume" />
       </div>
 
       {/* ── Hydrograph (with timeline cursor) ── */}
-      <div className="card !p-3">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="eyebrow">Outflow hydrograph</div>
-          {isFetching && <Loader2 size={12} className="text-mist animate-spin" />}
+      <div className="mt-5 pt-5 border-t border-white/[.06]">
+        <div className="flex items-baseline justify-between mb-1">
+          <div className="tech-label">Outflow hydrograph · Q(t)</div>
         </div>
-        <div className="h-[170px] -ml-2">
+        <div className="text-[10.5px] text-steel mb-2">
+          Saberi &amp; Zenz (2015) · mass-balanced to V<sub>w</sub>
+        </div>
+        <div className="h-[150px] -ml-2">
           {error ? (
             <div className="h-full flex items-center justify-center text-ember gap-2 text-xs">
               <AlertCircle size={14} /> API error
@@ -136,14 +133,14 @@ export default function ImpactPanel() {
       </div>
 
       {/* ── Post-processing (honest placeholders) ── */}
-      <div className="card !p-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="eyebrow">Post-processing</div>
+      <div className="mt-5 pt-5 border-t border-white/[.06]">
+        <div className="flex items-center justify-between mb-2.5">
+          <div className="tech-label">Post-processing</div>
           <div className="text-[9.5px] text-steel uppercase tracking-[.16em]">
             awaiting run
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-x-4">
           {[
             { l: "Flood extent · km²",     needs: "Delft3D" },
             { l: "Max depth · m",           needs: "SPH VTK" },
@@ -162,23 +159,19 @@ export default function ImpactPanel() {
 
 function BigKpi({ value, unit, label }: { value: string; unit: string; label: string }) {
   return (
-    <div className="rounded-lg border border-white/[.06] bg-abyss/70 px-3 py-2.5">
+    <div className="measure border-b border-white/[.06]">
       <div className="flex items-baseline gap-1.5">
-        <div className="fs-serif text-cream text-2xl leading-none tabular-nums">
-          {value}
-        </div>
+        <div className="measure-value">{value}</div>
         <div className="text-[10px] text-mist">{unit}</div>
       </div>
-      <div className="text-[10px] text-mist uppercase tracking-[.16em] mt-1">
-        {label}
-      </div>
+      <div className="measure-label">{label}</div>
     </div>
   );
 }
 
 function ProcessingCell({ label, needs }: { label: string; needs: string }) {
   return (
-    <div className="rounded-md border border-white/[.05] bg-abyss/60 px-3 py-2">
+    <div className="py-2 border-b border-white/[.05]">
       <div className="text-mist text-[10px] uppercase tracking-[.14em] leading-tight">
         {label}
       </div>

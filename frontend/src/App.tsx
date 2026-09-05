@@ -1,13 +1,15 @@
 import Header from "./components/Header";
 import ParameterPanel from "./components/ParameterPanel";
 import DamMap from "./components/DamMap";
+import DamDossier from "./components/DamDossier";
 import ImpactPanel from "./components/ImpactPanel";
 import SimulationPanel from "./components/SimulationPanel";
 import NRTPanel from "./components/NRTPanel";
 
 /**
  * Dashboard — the console view.
- * Left: parameters. Centre: map. Right: impact + simulation launcher + NRT SAR.
+ * Left: scenario registry. Centre: map (locked). Right: one continuous
+ * dossier — selected dam, impact estimate, run action, advanced SAR.
  */
 export default function App() {
   return (
@@ -24,11 +26,13 @@ export default function App() {
             <DamMap />
           </div>
 
-          <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-1">
+          <aside className="bg-graphite/70 border border-white/[.06] rounded-xl backdrop-blur-sm
+                            flex flex-col min-h-0 overflow-y-auto divide-y divide-white/[.06]">
+            <DamDossier />
             <ImpactPanel />
             <SimulationPanel />
             <NRTPanel />
-          </div>
+          </aside>
         </main>
       </div>
     </div>
