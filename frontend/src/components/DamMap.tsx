@@ -7,9 +7,10 @@ import { Layers, Mountain, Radar, MapPin, Play, Pause, RotateCcw } from "lucide-
 import { listDams, breachPreview } from "../api/client";
 import { useDam } from "../store/damStore";
 import { useTimeline } from "../store/timelineStore";
+import { useSar } from "../store/sarStore";
 import type { DamInfo, DamParameters } from "../types";
 
-type LayerMode = "terrain" | "domain";
+type LayerMode = "terrain" | "domain" | "flood";
 
 // ── Geographic-circle GeoJSON (radius km) ───────────────────────
 function circleGeoJSON(lon: number, lat: number, radiusKm: number, n = 96) {
@@ -79,6 +80,8 @@ export default function DamMap() {
 
   const setK = useDam((s) => s.set);
   const dam = useDam((s) => s.dam);
+  const sarGeoJSON = useSar((s) => s.geojson);
+  const hasFlood = !!sarGeoJSON && sarGeoJSON.features?.length > 0;
 
   const { data: dams, isLoading } = useQuery({
     queryKey: ["dams"],
@@ -274,11 +277,56 @@ export default function DamMap() {
       };
       ensureCircle("far-domain",  "#6E9DA5", 0.06, [4, 3]);
       ensureCircle("near-domain", "#C8785F", 0.10, [3, 2]);
+
+      // ── SAR flood layer (populated by NRTPanel via useSar) ──
+      if (!m.getSource("sar-flood")) {
+        m.addSource("sar-flood", { type: "geojson",
+          data: { type: "FeatureCollection", features: [] } });
+        m.addLayer({
+          id: "sar-flood-fill", type: "fill", source: "sar-flood",
+          layout: { visibility: "none" },
+          paint: {
+            "fill-color": "#C8785F",
+            "fill-opacity": 0.42,
+            "fill-outline-color": "#F1F0EA",
+          },
+        });
+        m.addLayer({
+          id: "sar-flood-line", type: "line", source: "sar-flood",
+          layout: { visibility: "none" },
+          paint: {
+            "line-color": "#F1F0EA",
+            "line-width": 0.6,
+            "line-opacity": 0.55,
+          },
+        });
+      }
     });
 
     mapRef.current = m;
     return () => { m.remove(); mapRef.current = null; };
   }, []);
+
+  // ─────────────────────────────────────────────────────────────
+  // Push SAR geojson into the flood layer + toggle its visibility
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m) return;
+    const push = () => {
+      const src = m.getSource("sar-flood") as any;
+      if (src) src.setData(sarGeoJSON ?? { type: "FeatureCollection", features: [] });
+      const visible = layerMode === "flood" && hasFlood ? "visible" : "none";
+      if (m.getLayer("sar-flood-fill"))
+        m.setLayoutProperty("sar-flood-fill", "visibility", visible);
+      if (m.getLayer("sar-flood-line"))
+        m.setLayoutProperty("sar-flood-line", "visibility", visible);
+    };
+    if (m.isStyleLoaded()) push(); else m.once("style.load", push);
+  }, [sarGeoJSON, hasFlood, layerMode]);
+
+  // Flip to Flood layer the moment new SAR data arrives
+  useEffect(() => { if (hasFlood) setLayerMode("flood"); }, [hasFlood]);
 
   // ─────────────────────────────────────────────────────────────
   // Render dam markers (small dots + one prominent selected diamond)
@@ -497,10 +545,16 @@ export default function DamMap() {
             <Radar size={12} /> Domain
           </LayerBtn>
           <button
-            disabled
-            title="Available once Phase-5 post-processing is wired"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px]
-                       uppercase tracking-[.14em] text-steel/60 opacity-40 cursor-not-allowed"
+            onClick={() => hasFlood && setLayerMode("flood")}
+            disabled={!hasFlood}
+            title={hasFlood ? "Show SAR flood polygons" : "Run an NRT SAR analysis first"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px]
+                        uppercase tracking-[.14em] transition
+                        ${layerMode === "flood" && hasFlood
+                          ? "bg-water/20 text-cream border border-water/40"
+                          : hasFlood
+                          ? "text-mist hover:text-cream"
+                          : "text-steel/60 opacity-40 cursor-not-allowed"}`}
           >
             <Layers size={12} /> Flood
           </button>

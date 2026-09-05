@@ -1,6 +1,5 @@
 # CyberFlares — backend stack.
-# Frontend runs natively (see frontend/README.md) — Vite in Docker on
-# Windows is fragile enough that it's not worth the containerization.
+# Frontend runs natively via `npm run dev` (see frontend/README.md).
 
 services:
   nginx:
@@ -23,11 +22,14 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=*
     env_file: ./backend/.env
     ports:
-      - "8000:8000"                # exposed so the native Vite dev-server can proxy to it
+      - "8000:8000"
     volumes:
       - ./backend/app:/app/app:ro
       - ./backend/scripts:/app/scripts:ro
       - sim_data:/app/data
+      # Google Earth Engine credentials from the host (`earthengine authenticate`).
+      # ${USERPROFILE} resolves to C:\Users\<you> on Windows.
+      - ${USERPROFILE}/.config/earthengine:/root/.config/earthengine:ro
     depends_on:
       redis:      { condition: service_healthy }
       postgis:    { condition: service_healthy }
@@ -45,6 +47,7 @@ services:
       - ./backend/app:/app/app:ro
       - ./backend/scripts:/app/scripts:ro
       - sim_data:/app/data
+      - ${USERPROFILE}/.config/earthengine:/root/.config/earthengine:ro
     depends_on:
       redis:      { condition: service_healthy }
       postgis:    { condition: service_healthy }

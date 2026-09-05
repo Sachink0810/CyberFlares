@@ -8,12 +8,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
-from .api import health, simulations, breach, dams
+from .api import health, simulations, breach, dams, nrt
 
 app = FastAPI(
     title="CyberFlares — Dam Break Inundation Framework",
     description="NTRO SIH 26161 · SPH + Delft3D + GEE",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 app.add_middleware(
@@ -28,6 +28,7 @@ app.include_router(health.router)
 app.include_router(dams.router)
 app.include_router(breach.router)
 app.include_router(simulations.router)
+app.include_router(nrt.router)
 
 
 @app.get("/")

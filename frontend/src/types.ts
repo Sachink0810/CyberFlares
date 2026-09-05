@@ -66,4 +66,26 @@ export interface JobSummary {
   artifacts: Record<string, string>;
   error: string | null;
   request?: unknown;
+  manifest_summary?: {
+    orbit?: unknown;
+    threshold?: number;
+    area_hectares?: unknown;
+    warnings?: string[];
+  };
+}
+
+// ── NRT SAR ────────────────────────────────────────────────────────
+export type PassDirection = "AUTO" | "ASCENDING" | "DESCENDING" | "BOTH";
+
+export interface SARFloodRequest {
+  project_id: string;
+  event_name: string;
+  center_lat: number;
+  center_lon: number;
+  radius_km: number;
+  start_date: string;   // YYYY-MM-DD
+  end_date: string;
+  change_detection?: boolean;
+  pass_direction?: PassDirection;
+  polarisation?: "VV" | "VH";
 }
